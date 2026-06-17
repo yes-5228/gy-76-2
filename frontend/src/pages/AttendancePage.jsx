@@ -11,9 +11,10 @@ const initialForm = {
   note: "",
 };
 
-export function AttendancePage({ students, teachers, attendance, onCreated }) {
+export function AttendancePage({ students, teachers, attendance, onCreated, onRefresh }) {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedStudent = useMemo(
     () => students.find((item) => item.id === form.student_id),
@@ -29,6 +30,7 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
   const hoursInsufficient = selectedStudent && form.hours > selectedStudent.remaining_hours;
   const hoursInvalid = form.hours <= 0;
   const canSubmit =
+    !submitting &&
     form.student_id &&
     form.teacher_id &&
     form.course_name &&
@@ -39,6 +41,8 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
 
   const submit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setMessage("");
     try {
       await api.checkIn(form);
@@ -47,6 +51,11 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
       setMessage("签到成功，课时已扣减");
     } catch (error) {
       setMessage(error.message);
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -128,7 +137,9 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
             备注
             <textarea value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} rows="3" />
           </label>
-          <button className="primary-button" type="submit" disabled={!canSubmit}>确认签到</button>
+          <button className="primary-button" type="submit" disabled={!canSubmit}>
+            {submitting ? "签到中..." : "确认签到"}
+          </button>
           {message ? <div className="inline-message">{message}</div> : null}
         </form>
       </section>

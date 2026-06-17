@@ -68,6 +68,7 @@ export function App() {
                 teachers={data.teachers}
                 attendance={data.attendance}
                 onCreated={refresh}
+                onRefresh={refresh}
               />
             )}
             {activePage === "students" && (

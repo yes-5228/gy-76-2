@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from .validation import require_fields
 from ..storage import mutate, new_id, read_data
@@ -41,7 +41,32 @@ def check_in(payload):
         if student["remaining_hours"] < hours:
             raise ValueError("学员剩余课时不足")
 
+        now = datetime.now()
+        recent_duplicate = next(
+            (
+                record
+                for record in reversed(data["attendance"])
+                if record["student_id"] == attendance_record["student_id"]
+                and record["teacher_id"] == attendance_record["teacher_id"]
+                and record["course_name"] == attendance_record["course_name"]
+                and record["hours"] == attendance_record["hours"]
+                and record["checked_at"] == attendance_record["checked_at"]
+                and record["note"] == attendance_record["note"]
+            ),
+            None,
+        )
+        if recent_duplicate:
+            record_time_str = recent_duplicate.get("created_at")
+            if record_time_str:
+                try:
+                    record_time = datetime.fromisoformat(record_time_str)
+                except (ValueError, TypeError):
+                    record_time = None
+                if record_time and now - record_time < timedelta(minutes=1):
+                    raise ValueError("请勿重复签到")
+
         student["remaining_hours"] = round(student["remaining_hours"] - hours, 2)
+        attendance_record["created_at"] = now.isoformat()
         data["attendance"].append(attendance_record)
         return data
 
