@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 
@@ -14,6 +14,28 @@ const initialForm = {
 export function AttendancePage({ students, teachers, attendance, onCreated }) {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState("");
+
+  const selectedStudent = useMemo(
+    () => students.find((item) => item.id === form.student_id),
+    [students, form.student_id]
+  );
+  const selectedTeacher = useMemo(
+    () => teachers.find((item) => item.id === form.teacher_id),
+    [teachers, form.teacher_id]
+  );
+
+  const studentInactive = selectedStudent && selectedStudent.status !== "active";
+  const teacherInactive = selectedTeacher && selectedTeacher.status !== "active";
+  const hoursInsufficient = selectedStudent && form.hours > selectedStudent.remaining_hours;
+  const hoursInvalid = form.hours <= 0;
+  const canSubmit =
+    form.student_id &&
+    form.teacher_id &&
+    form.course_name &&
+    form.hours > 0 &&
+    !studentInactive &&
+    !teacherInactive &&
+    !hoursInsufficient;
 
   const submit = async (event) => {
     event.preventDefault();
@@ -50,23 +72,31 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
             <select value={form.student_id} onChange={(event) => onStudentChange(event.target.value)} required>
               <option value="">请选择学员</option>
               {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.name}（余 {student.remaining_hours}）
+                <option key={student.id} value={student.id} disabled={student.status !== "active"}>
+                  {student.name}（余 {student.remaining_hours}）{student.status !== "active" ? " — 已停用" : ""}
                 </option>
               ))}
             </select>
           </label>
+          {studentInactive ? (
+            <div className="inline-message error">该学员已停用，无法签到</div>
+          ) : null}
+
           <label>
             授课教师
             <select value={form.teacher_id} onChange={(event) => setForm({ ...form, teacher_id: event.target.value })} required>
               <option value="">请选择教师</option>
               {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name} / {teacher.subject}
+                <option key={teacher.id} value={teacher.id} disabled={teacher.status !== "active"}>
+                  {teacher.name} / {teacher.subject}{teacher.status !== "active" ? " — 已停用" : ""}
                 </option>
               ))}
             </select>
           </label>
+          {teacherInactive ? (
+            <div className="inline-message error">该教师已停用，无法签到</div>
+          ) : null}
+
           <div className="form-row">
             <label>
               课程
@@ -84,6 +114,12 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
               />
             </label>
           </div>
+          {hoursInvalid ? (
+            <div className="inline-message error">课时必须大于 0</div>
+          ) : hoursInsufficient ? (
+            <div className="inline-message error">剩余课时不足（剩余 {selectedStudent.remaining_hours} 课时）</div>
+          ) : null}
+
           <label>
             日期
             <input type="date" value={form.checked_at} onChange={(event) => setForm({ ...form, checked_at: event.target.value })} />
@@ -92,7 +128,7 @@ export function AttendancePage({ students, teachers, attendance, onCreated }) {
             备注
             <textarea value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} rows="3" />
           </label>
-          <button className="primary-button" type="submit">确认签到</button>
+          <button className="primary-button" type="submit" disabled={!canSubmit}>确认签到</button>
           {message ? <div className="inline-message">{message}</div> : null}
         </form>
       </section>

@@ -5,7 +5,7 @@ from datetime import date
 from threading import Lock
 from uuid import uuid4
 
-from .config import DATA_FILE
+from . import config
 
 _lock = Lock()
 
@@ -43,9 +43,9 @@ def _default_data():
             },
         ],
         "teachers": [
-            {"id": "tea-001", "name": "王老师", "subject": "少儿编程", "hourly_rate": 120},
-            {"id": "tea-002", "name": "赵老师", "subject": "创意美术", "hourly_rate": 100},
-            {"id": "tea-003", "name": "刘老师", "subject": "英语启蒙", "hourly_rate": 110},
+            {"id": "tea-001", "name": "王老师", "subject": "少儿编程", "hourly_rate": 120, "status": "active"},
+            {"id": "tea-002", "name": "赵老师", "subject": "创意美术", "hourly_rate": 100, "status": "active"},
+            {"id": "tea-003", "name": "刘老师", "subject": "英语启蒙", "hourly_rate": 110, "status": "active"},
         ],
         "attendance": [
             {
@@ -72,25 +72,25 @@ def _default_data():
 
 
 def _ensure_file():
-    if os.path.exists(DATA_FILE):
+    if os.path.exists(config.DATA_FILE):
         return
 
-    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-    with open(DATA_FILE, "w", encoding="utf-8") as file:
+    os.makedirs(os.path.dirname(config.DATA_FILE), exist_ok=True)
+    with open(config.DATA_FILE, "w", encoding="utf-8") as file:
         json.dump(_default_data(), file, ensure_ascii=False, indent=2)
 
 
 def read_data():
     with _lock:
         _ensure_file()
-        with open(DATA_FILE, "r", encoding="utf-8") as file:
+        with open(config.DATA_FILE, "r", encoding="utf-8") as file:
             return json.load(file)
 
 
 def write_data(data):
     with _lock:
-        os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-        with open(DATA_FILE, "w", encoding="utf-8") as file:
+        os.makedirs(os.path.dirname(config.DATA_FILE), exist_ok=True)
+        with open(config.DATA_FILE, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
 
 

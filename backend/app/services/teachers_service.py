@@ -13,6 +13,7 @@ def create_teacher(payload):
         "name": payload["name"].strip(),
         "subject": payload["subject"].strip(),
         "hourly_rate": float(payload["hourly_rate"]),
+        "status": payload.get("status", "active"),
     }
 
     def add(data):

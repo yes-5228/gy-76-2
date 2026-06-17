@@ -34,6 +34,10 @@ def check_in(payload):
             raise ValueError("学员不存在")
         if not teacher:
             raise ValueError("教师不存在")
+        if student.get("status", "active") != "active":
+            raise ValueError("学员状态异常，无法签到")
+        if teacher.get("status", "active") != "active":
+            raise ValueError("教师状态异常，无法签到")
         if student["remaining_hours"] < hours:
             raise ValueError("学员剩余课时不足")
 

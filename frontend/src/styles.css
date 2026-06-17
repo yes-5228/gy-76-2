@@ -143,6 +143,11 @@ h2 {
   padding: 12px 14px;
 }
 
+.inline-message.error {
+  background: #fde8e8;
+  color: #b42318;
+}
+
 .page-grid {
   display: grid;
   gap: 18px;
@@ -258,6 +263,12 @@ textarea {
 
 .primary-button {
   min-height: 42px;
+}
+
+.primary-button:disabled,
+.small-button:disabled {
+  background: #a9b9b1;
+  cursor: not-allowed;
 }
 
 .small-button {
