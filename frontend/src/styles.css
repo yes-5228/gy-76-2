@@ -146,6 +146,13 @@ h2 {
 .inline-message.error {
   background: #fde8e8;
   color: #b42318;
+  border: 1px solid #f9b4ab;
+}
+
+.inline-message.success {
+  background: #e1f4e9;
+  color: #0f6b52;
+  border: 1px solid #8cc7a3;
 }
 
 .page-grid {

@@ -14,6 +14,7 @@ const initialForm = {
 export function AttendancePage({ students, teachers, attendance, onCreated, onRefresh }) {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const selectedStudent = useMemo(
@@ -44,13 +45,16 @@ export function AttendancePage({ students, teachers, attendance, onCreated, onRe
     if (submitting) return;
     setSubmitting(true);
     setMessage("");
+    setMessageType("");
     try {
       await api.checkIn(form);
       setForm(initialForm);
       await onCreated();
       setMessage("签到成功，课时已扣减");
+      setMessageType("success");
     } catch (error) {
       setMessage(error.message);
+      setMessageType("error");
       if (onRefresh) {
         await onRefresh();
       }
@@ -140,7 +144,7 @@ export function AttendancePage({ students, teachers, attendance, onCreated, onRe
           <button className="primary-button" type="submit" disabled={!canSubmit}>
             {submitting ? "签到中..." : "确认签到"}
           </button>
-          {message ? <div className="inline-message">{message}</div> : null}
+          {message ? <div className={`inline-message ${messageType}`}>{message}</div> : null}
         </form>
       </section>
 
