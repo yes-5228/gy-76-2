@@ -305,6 +305,18 @@ textarea {
   display: block;
 }
 
+.table-row.faded strong {
+  opacity: 0.6;
+}
+
+.panel-hint {
+  font-size: 12px;
+  color: #8a968f;
+  padding: 8px 16px;
+  background: #f7fbf8;
+  border-bottom: 1px solid #edf2ef;
+}
+
 .warning-text {
   color: #a45b00;
 }

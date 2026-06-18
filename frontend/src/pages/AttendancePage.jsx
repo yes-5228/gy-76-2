@@ -153,12 +153,22 @@ export function AttendancePage({ students, teachers, attendance, onCreated, onRe
           <h2>签到记录</h2>
           <span>{attendance.length} 条</span>
         </div>
+        {attendance.some((r) => !r.has_exact_time) ? (
+          <div className="panel-hint">标有 * 的记录无精确签到时间</div>
+        ) : null}
         {attendance.length ? (
           attendance.map((record) => (
-            <div className="table-row" key={record.id}>
+            <div className={`table-row ${record.has_exact_time ? "" : "faded"}`} key={record.id}>
               <div>
                 <strong>{record.student_name}</strong>
-                <span>{record.checked_at} / {record.teacher_name} / {record.course_name}</span>
+                <span>
+                  {record.display_time || record.checked_at}
+                  {record.has_exact_time ? "" : " *"}
+                  {" / "}
+                  {record.teacher_name}
+                  {" / "}
+                  {record.course_name}
+                </span>
               </div>
               <b>{record.hours} 课时</b>
             </div>

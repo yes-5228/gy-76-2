@@ -8,7 +8,9 @@ def list_attendance():
     data = read_data()
     students = {student["id"]: student for student in data["students"]}
     teachers = {teacher["id"]: teacher for teacher in data["teachers"]}
-    return [_with_names(record, students, teachers) for record in sorted(data["attendance"], key=lambda item: item["checked_at"], reverse=True)]
+    records = [_with_names(record, students, teachers) for record in data["attendance"]]
+    records.sort(key=lambda item: item.get("created_at") or item["checked_at"], reverse=True)
+    return records
 
 
 def check_in(payload):
@@ -51,14 +53,19 @@ def check_in(payload):
             None,
         )
         if recent_record:
+            is_duplicate = False
             record_time_str = recent_record.get("created_at")
             if record_time_str:
                 try:
                     record_time = datetime.fromisoformat(record_time_str)
+                    if now - record_time < timedelta(minutes=1):
+                        is_duplicate = True
                 except (ValueError, TypeError):
-                    record_time = None
-                if record_time and now - record_time < timedelta(minutes=1):
-                    raise ValueError("该学员刚刚已签到，请勿重复操作")
+                    pass
+            if not is_duplicate and recent_record.get("checked_at") == attendance_record["checked_at"]:
+                is_duplicate = True
+            if is_duplicate:
+                raise ValueError("该学员刚刚已签到，请勿重复操作")
 
         student["remaining_hours"] = round(student["remaining_hours"] - hours, 2)
         attendance_record["created_at"] = now.isoformat()
@@ -72,8 +79,20 @@ def check_in(payload):
 def _with_names(record, students, teachers):
     student = students.get(record["student_id"], {})
     teacher = teachers.get(record["teacher_id"], {})
+    display_time = record.get("checked_at", "")
+    has_exact_time = False
+    created_at_str = record.get("created_at")
+    if created_at_str:
+        try:
+            created_at = datetime.fromisoformat(created_at_str)
+            display_time = created_at.strftime("%Y-%m-%d %H:%M")
+            has_exact_time = True
+        except (ValueError, TypeError):
+            pass
     return {
         **record,
         "student_name": student.get("name", "未知学员"),
         "teacher_name": teacher.get("name", "未知教师"),
+        "display_time": display_time,
+        "has_exact_time": has_exact_time,
     }
